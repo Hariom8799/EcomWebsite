@@ -102,7 +102,7 @@ function App() {
 
 
   const getUserDetails = () => {
-    fetchDataFromApi(`/api/user/user-details`).then((res) => {
+    fetchDataFromApi(`/api/user/user-details/${localStorage.getItem("userId")}`).then((res) => {
       setUserData(res.data);
       if (res?.response?.data?.error === true) {
         if (res?.response?.data?.message === "You have not login") {

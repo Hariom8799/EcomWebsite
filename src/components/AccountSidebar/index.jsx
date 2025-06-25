@@ -65,7 +65,7 @@ const AccountSidebar = () => {
         avatar.push(res?.data?.avtar);
         setPreviews(avatar);
         context.alertBox("success", "Profile picture updated successfully!");
-        fetchDataFromApi(`/api/user/user-details`).then((res) => {
+        fetchDataFromApi(`/api/user/user-details/${localStorage.getItem("userId")}`).then((res) => {
           context?.setUserData(res.data);
         })
 

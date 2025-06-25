@@ -21,33 +21,9 @@ export const ProductDetailsComponent = (props) => {
   const [tabError, setTabError] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [isAddedInMyList, setIsAddedInMyList] = useState(false);
-  const [productFiles, setProductFiles] = useState([]);
-  const [canViewFiles, setCanViewFiles] = useState(false);
 
 
   const context = useContext(MyContext);
-
-  useEffect(() => {
-    const fetchProductFiles = async () => {
-      const userId = localStorage.getItem("userId");
-      if (!userId || !props?.item?._id) return;
-
-      try {
-        const res = await fetchDataFromApi(`/api/productFile/product/${props?.item?._id}`);
-        if (res?.success && res.data) {
-          const isUserAllowed = res.data.users.some((user) => user._id === userId);
-          setCanViewFiles(isUserAllowed);
-          if (isUserAllowed) {
-            setProductFiles(res.data.fileUrls);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch product files", err);
-      }
-    };
-
-    fetchProductFiles();
-  }, [props?.item?._id]);
 
   const handleSelecteQty = (qty) => {
     setQuantity(qty);
@@ -298,8 +274,6 @@ export const ProductDetailsComponent = (props) => {
         </div>
       }
 
-
-
       {
         props?.item?.productWeight?.length !== 0 &&
         <div className="flex items-center gap-3">
@@ -370,35 +344,7 @@ export const ProductDetailsComponent = (props) => {
         
 
       </div>
-      {canViewFiles && productFiles?.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-3">Product Files</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {productFiles.map((file, index) => {
-              const ext = file.split('.').pop().toLowerCase();
-              let icon = "📄"; // default
-
-              if (["png", "jpg", "jpeg", "gif", "bmp"].includes(ext)) icon = "🖼️";
-              else if (["pdf"].includes(ext)) icon = "📕";
-              else if (["doc", "docx"].includes(ext)) icon = "📝";
-              else if (["xls", "xlsx"].includes(ext)) icon = "📊";
-
-              return (
-                <a
-                  key={index}
-                  href={file}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-2 border rounded hover:bg-gray-100 transition"
-                >
-                  <span className="text-2xl">{icon}</span>
-                  <span className="truncate">{file.split('/').pop()}</span>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      
     </>
   );
 };

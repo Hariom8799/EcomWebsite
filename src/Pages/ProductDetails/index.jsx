@@ -140,6 +140,13 @@ export const ProductDetails = () => {
                   >
                     Reviews ({reviewsCount})
                   </span>
+                  <span
+                    className={`link text-[17px] cursor-pointer font-[500] ${activeTab === 2 && "text-primary"}`}
+                    onClick={() => setActiveTab(2)}
+                  >
+                    Files
+                  </span>
+
                 </div>
 
                 {activeTab === 0 && (
@@ -159,6 +166,43 @@ export const ProductDetails = () => {
 
                   </div>
                 )}
+
+                {activeTab === 2 && (
+                  <div className="shadow-md w-full py-5 px-8 rounded-md text-[14px]">
+                    {productData?.files?.length > 0 ? (
+                      Object.entries(
+                        productData.files.reduce((acc, file) => {
+                          const folder = file.folderName?.trim() || "Uncategorized";
+                          if (!acc[folder]) acc[folder] = [];
+                          acc[folder].push(file);
+                          return acc;
+                        }, {})
+                      ).map(([folderName, files], idx) => (
+                        <div key={idx} className="mb-6">
+                          <h3 className="text-[16px] font-semibold mb-2 border-b pb-1">{folderName}</h3>
+                          <ul className="pl-4 space-y-2">
+                            {files.map((file) => (
+                              <li key={file._id} className="flex items-center gap-2">
+                                📄
+                                <a
+                                  href={file.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 underline hover:text-blue-800 transition-all"
+                                >
+                                  {file.fileName}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No files available for this product.</p>
+                    )}
+                  </div>
+                )}
+
               </div>
 
               {
