@@ -14,6 +14,8 @@ import { useLocation } from "react-router-dom";
 import { postData } from "../../utils/api";
 import { MdOutlineFilterAlt } from "react-icons/md";
 import CategoryItem from "./CategoryItem";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 export const Sidebar = (props) => {
@@ -27,7 +29,9 @@ export const Sidebar = (props) => {
     maxPrice: '',
     rating: [],
     page: 1,
-    limit: 25
+    limit: 25,
+    startDate: null,
+    endDate: null,
   })
 
 
@@ -145,10 +149,37 @@ export const Sidebar = (props) => {
 
 
 
+  // const filtesData = () => {
+  //   props.setIsLoading(true);
+
+  //   //console.log(context?.searchData)
+
+  //   if (context?.searchData?.products?.length > 0) {
+  //     props.setProductsData(context?.searchData);
+  //     props.setIsLoading(false);
+  //     props.setTotalPages(context?.searchData?.totalPages)
+  //     window.scrollTo(0, 0);
+  //   } else {
+  //     postData(`/api/product/filters`, filters).then((res) => {
+  //       props.setProductsData(res);
+  //       props.setIsLoading(false);
+  //       props.setTotalPages(res?.totalPages)
+  //       window.scrollTo(0, 0);
+  //     })
+  //   }
+
+
+  // }
+
   const filtesData = () => {
     props.setIsLoading(true);
 
-    //console.log(context?.searchData)
+    // Format dates for API if they exist
+    const filterData = {
+      ...filters,
+      startDate: filters.startDate ? filters.startDate.toISOString().split('T')[0] : null,
+      endDate: filters.endDate ? filters.endDate.toISOString().split('T')[0] : null
+    };
 
     if (context?.searchData?.products?.length > 0) {
       props.setProductsData(context?.searchData);
@@ -156,23 +187,30 @@ export const Sidebar = (props) => {
       props.setTotalPages(context?.searchData?.totalPages)
       window.scrollTo(0, 0);
     } else {
-      postData(`/api/product/filters`, filters).then((res) => {
+      postData(`/api/product/filters`, filterData).then((res) => {
         props.setProductsData(res);
         props.setIsLoading(false);
         props.setTotalPages(res?.totalPages)
         window.scrollTo(0, 0);
-      })
+      }).catch((error) => {
+        console.error('Filter error:', error);
+        props.setIsLoading(false);
+      });
     }
-
-
-  }
+  };
 
 
 
   useEffect(() => {
     filters.page = props.page;
     filtesData();
-  }, [filters, props.page])
+  }, [filters.catId,
+    filters.subCatId,
+    filters.thirdsubCatId,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.rating,
+    props.page])
 
 
   useEffect(() => {
@@ -183,10 +221,39 @@ export const Sidebar = (props) => {
     }))
   }, [price]);
 
+  useEffect(() => {
+    // Only trigger filter when both dates are selected or when clearing dates
+    if ((filters.startDate && filters.endDate) || (!filters.startDate && !filters.endDate)) {
+      const timer = setTimeout(() => {
+        filtesData();
+      }, 500); // Add debounce to prevent too many API calls
+
+      return () => clearTimeout(timer);
+    }
+  }, [filters.startDate, filters.endDate]);
+  
+
+  const resetFilters = () => {
+    setFilters({
+      catId: [],
+      subCatId: [],
+      thirdsubCatId: [],
+      minPrice: '',
+      maxPrice: '',
+      rating: [],
+      startDate: null,
+      endDate: null,
+      page: 1,
+      limit: 25
+    });
+    setPrice([0, 60000]);
+    context?.setSearchData([]);
+  };
+
 
   return (
     <aside className="sidebar py-3  lg:py-5 static lg:sticky top-[130px] z-[50] pr-0 lg:pr-5">
-      <div className=" max-h-[60vh]  lg:overflow-visible overflow-auto  w-full">
+      <div className=" min-h-[60vh]  lg:overflow-visible overflow-auto  w-full">
         <div className="box">
           <h3 className="w-full mb-3 text-[16px] font-[600] flex items-center pr-5">
             Shop by Category
@@ -348,6 +415,71 @@ export const Sidebar = (props) => {
 
         </div>
 
+        <div className="box mt-4">
+          <h3 className="w-full mb-3 text-[16px] font-[600] flex items-center pr-5">
+            Filter By Date
+          </h3>
+          <div className="flex flex-col gap-3">
+            <div>
+              <label className="text-[13px] text-gray-600 block mb-1">Start Date:</label>
+              <DatePicker
+                selected={filters.startDate}
+                onChange={(date) => {
+                  setFilters(prev => ({ ...prev, startDate: date }));
+                  // Clear search data when date changes
+                  context?.setSearchData([]);
+                }}
+                selectsStart
+                startDate={filters.startDate}
+                endDate={filters.endDate}
+                placeholderText="Select start date"
+                className="w-full p-2 border rounded text-[13px]"
+                dateFormat="dd/MM/yyyy"
+                maxDate={new Date()} // Prevent future dates
+              />
+            </div>
+            <div>
+              <label className="text-[13px] text-gray-600 block mb-1">End Date:</label>
+              <DatePicker
+                selected={filters.endDate}
+                onChange={(date) => {
+                  setFilters(prev => ({ ...prev, endDate: date }));
+                  // Clear search data when date changes
+                  context?.setSearchData([]);
+                }}
+                selectsEnd
+                startDate={filters.startDate}
+                endDate={filters.endDate}
+                minDate={filters.startDate}
+                placeholderText="Select end date"
+                className="w-full p-2 border rounded text-[13px]"
+                dateFormat="dd/MM/yyyy"
+                maxDate={new Date()} // Prevent future dates
+              />
+            </div>
+            {/* Add clear dates button */}
+            {(filters.startDate || filters.endDate) && (
+              <Button
+                className="!text-[12px] !text-red-600 !p-1"
+                onClick={() => {
+                  setFilters(prev => ({ ...prev, startDate: null, endDate: null }));
+                  context?.setSearchData([]);
+                }}
+              >
+                Clear Dates
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="box mt-4">
+          <Button
+            className="btn-secondary w-full !bg-gray-200 !text-gray-700 hover:!bg-gray-300"
+            onClick={resetFilters}
+          >
+            Reset All Filters
+          </Button>
+        </div>
 
       </div>
       <br />

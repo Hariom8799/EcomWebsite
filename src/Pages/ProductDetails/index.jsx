@@ -21,6 +21,28 @@ export const ProductDetails = () => {
 
   const reviewSec = useRef();
 
+  // Group files by folder (empty object initially)
+  const [folderOpenStates, setFolderOpenStates] = useState({});
+
+  useEffect(() => {
+    if (productData?.files?.length > 0) {
+      const groupedFiles = productData.files.reduce((acc, file) => {
+        const folder = file.folderName?.trim() || "Uncategorized";
+        if (!acc[folder]) acc[folder] = [];
+        acc[folder].push(file);
+        return acc;
+      }, {});
+      const folderNames = Object.keys(groupedFiles);
+      const initialState = folderNames.reduce((acc, name) => {
+        acc[name] = true;
+        return acc;
+      }, {});
+      setFolderOpenStates(initialState);
+    }
+  }, [productData?.files]);
+
+
+
   useEffect(() => {
     fetchDataFromApi(`/api/user/getReviews?productId=${id}`).then((res) => {
       if (res?.error === false) {
@@ -167,7 +189,7 @@ export const ProductDetails = () => {
                   </div>
                 )}
 
-                {activeTab === 2 && (
+                {/* {activeTab === 2 && (
                   <div className="shadow-md w-full py-5 px-8 rounded-md text-[14px]">
                     {productData?.files?.length > 0 ? (
                       Object.entries(
@@ -201,7 +223,94 @@ export const ProductDetails = () => {
                       <p className="text-gray-500">No files available for this product.</p>
                     )}
                   </div>
+                )} */}
+
+                {activeTab === 2 && (
+                  <div className="shadow-md w-full py-5 px-8 rounded-md text-[14px]">
+                    {productData?.files?.length > 0 ? (
+                      Object.entries(
+                        productData.files.reduce((acc, file) => {
+                          const folder = file.folderName?.trim() || "Uncategorized";
+                          if (!acc[folder]) acc[folder] = [];
+                          acc[folder].push(file);
+                          return acc;
+                        }, {})
+                      ).map(([folderName, files], idx) => {
+                        const isOpen = folderOpenStates[folderName];
+
+                        const toggleFolder = (name) => {
+                          setFolderOpenStates((prev) => ({
+                            ...prev,
+                            [name]: !prev[name],
+                          }));
+                        };
+
+                        return (
+                          <div key={idx} className="mb-6 border border-gray-200 rounded-md">
+                            {/* Folder Header */}
+                            <div
+                              className="cursor-pointer bg-gray-100 px-4 py-2 flex items-center justify-between"
+                              onClick={() => toggleFolder(folderName)}
+                            >
+                              <span className="font-semibold text-[15px]">
+                                📁 {folderName} ({files.length})
+                              </span>
+                              <span className="text-gray-600 text-sm">
+                                {isOpen ? "▲ Collapse" : "▼ Expand"}
+                              </span>
+                            </div>
+
+                            {/* Folder Content */}
+                            {isOpen && (
+                              <div className="overflow-x-auto">
+                                <table className="min-w-full mt-2 text-left text-sm border-t border-gray-200">
+                                  <thead className="bg-gray-50">
+                                    <tr>
+                                      <th className="px-4 py-2 border">#</th>
+                                      <th className="px-4 py-2 border">File Name</th>
+                                      <th className="px-4 py-2 border">Version</th>
+                                      <th className="px-4 py-2 border">Uploaded By</th>
+                                      <th className="px-4 py-2 border">Uploaded At</th>
+                                      <th className="px-4 py-2 border">Download</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {files.map((file, fileIndex) => (
+                                      <tr key={file._id} className="hover:bg-gray-50 transition">
+                                        <td className="px-4 py-2 border">{fileIndex + 1}</td>
+                                        <td className="px-4 py-2 border">{file.fileName}</td>
+                                        <td className="px-4 py-2 border">{file.fileVersion}</td>
+                                        <td className="px-4 py-2 border">{file.uploadedBy || "N/A"}</td>
+                                        <td className="px-4 py-2 border">
+                                          {new Date(file.uploadedAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-4 py-2 border">
+                                          <a
+                                            href={file.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 underline hover:text-blue-800"
+                                          >
+                                            Download
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-gray-500">No files available for this product.</p>
+                    )}
+                  </div>
                 )}
+
+
+
 
               </div>
 
