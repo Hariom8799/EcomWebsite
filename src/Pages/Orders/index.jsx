@@ -933,7 +933,7 @@ const Orders = () => {
                                                                                 title="Download all files"
                                                                                 // disabled={!product?.files || product?.files.length === 0}
                                                                               >
-                                                                                <FiDownload className="text-[rgba(255,255,255,0.7)] text-[18px]" />
+                                                                                <FiDownload className=" text-gray-700 dark:text-[rgba(255,255,255,0.7)] text-[18px]" />
                                                                               </Button></td>
                                       </tr>
                                     ))}
