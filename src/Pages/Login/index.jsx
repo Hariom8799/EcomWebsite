@@ -21,7 +21,7 @@ const Login = () => {
     email:'',
     password:''
   });
-
+  const [verifyEmailRequired, setVerifyEmailRequired] = useState(false);
   const context  = useContext(MyContext);
   const history = useNavigate();
 
@@ -112,8 +112,16 @@ const Login = () => {
   
           history("/")
         } else {
-          context.alertBox("error", res?.message);
-          setIsLoading(false);
+          if (res?.message?.includes("verify your email")) {
+            setVerifyEmailRequired(true);
+            localStorage.removeItem("userEmail")
+            context.alertBox("error", res?.message);
+            setIsLoading(false);
+          }
+          else {
+            context.alertBox("error", res?.message);
+            setIsLoading(false);
+          }
         }
   
       })
@@ -237,7 +245,19 @@ const Login = () => {
               }
 
             </Button>
+            
           </div>
+            {verifyEmailRequired && (
+              <div className="mt-4 text-center">
+                <Button
+                  variant="outlined"
+                  className="!text-primary"
+                  onClick={() => history("/verify")}
+                >
+                  Verify Email
+                </Button>
+              </div>
+            )}
 
             <p className="text-center">Not Registered? <Link className="link text-[14px] font-[600] text-primary" to="/register"> Sign Up</Link></p>
 
